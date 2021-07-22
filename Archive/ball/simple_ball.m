@@ -36,8 +36,8 @@ target_ref          = [5]';
 cost.output         = eye(1);
 cost.control        = eye(1);
 
-constraints.hard.rate   = [-10, 10];
-constraints.hard.input  = [-50, 50];
+constraints.hard.rate   = [-1, 1];
+constraints.hard.input  = [-5, 5];
 constraints.hard.output = [-10, 10];
 
 constraints.soft.rate   = [-10, 10];
@@ -47,11 +47,10 @@ constraints.soft.output = [-10, 10];
 % ----------------------------------------------------------------------- %
 % Solve MPC QP Problem
 % ----------------------------------------------------------------------- %
-% output = solve_mpc(initial, params, cost, constraints, functions, ...
-%                    0, target_ref);
-output = solve_slack_mpc(initial, params, cost, constraints, functions, ...
+output = solve_mpc(initial, params, cost, constraints, functions, ...
                    0, target_ref);
-
+% output = solve_slack_mpc(initial, params, cost, constraints, functions, ...
+%                    0, target_ref);
 
 
 % ----------------------------------------------------------------------- %
