@@ -31,6 +31,8 @@ initial.control     = u0;
 
 target_ref          = [5]';
 
+auxdata.mass        = 10; 
+
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
@@ -39,7 +41,7 @@ cost.control        = eye(1);
 
 penalty_method      = 'quadratic';
 penalty_weight      = 1e0; % For slack variables
-hard_only           = false;
+hard_only           = true;
 
 constraints.hard.rate   = [-1, 1];
 constraints.hard.input  = [-1.5, 1.5];
@@ -50,10 +52,18 @@ constraints.soft.input  = [-1.5, 1.5];
 constraints.soft.output = [0, 7];
 
 % ----------------------------------------------------------------------- %
+% Define model mismatch auxdata
+% ----------------------------------------------------------------------- %
+model_mismatch          = false;
+mismatch_auxdata.mass   = 3;
+
+% ----------------------------------------------------------------------- %
 % Solve MPC QP Problem
 % ----------------------------------------------------------------------- %
 output = solve_slack_mpc(initial, params, cost, constraints, functions, ...
-                   0, target_ref, penalty_method, penalty_weight, hard_only);
+                         auxdata, target_ref, penalty_method,           ...
+                         penalty_weight, hard_only,                     ...
+                         model_mismatch, mismatch_auxdata);
 
 toc;
 % ----------------------------------------------------------------------- %
@@ -73,7 +83,7 @@ grid on;
 title('MPC input');
 ylabel('Input force (N)');
 xlabel('Time (s)');
-stairs(output.time, output.control, 'k-');
+stairs(output.time, output.control, 'b-');
 % patch('vertices', [0, constraints.soft.input(1); 
 %                    0, constraints.hard.input(1); 
 %                    params.sim_time, constraints.hard.input(1); 
@@ -101,12 +111,12 @@ sgtitle('Physical state trajectory');
 subplot(2,1,1);
 hold on;
 grid on;
-plot(output.time, output.state(1:2:end), 'k-');
+plot(output.time, output.state(1:2:end), 'b-');
 ylabel('x-position (m)');
 subplot(2,1,2);
 hold on;
 grid on;
-plot(output.time, output.state(2:2:end), 'k-');
+plot(output.time, output.state(2:2:end), 'b-');
 ylabel('velocity (m)');
 xlabel('Time (s)');
 
@@ -116,7 +126,7 @@ set(gcf,'color','w');
 hold on;
 title('Output');
 grid on;
-plot(output.time, output.Z, 'k-');
+plot(output.time, output.Z, 'b-');
 % plot([0,params.sim_time], [target_ref, target_ref], 'b--');
 % patch('vertices', [0, constraints.soft.output(1); 
 %                    0, constraints.hard.output(1); 

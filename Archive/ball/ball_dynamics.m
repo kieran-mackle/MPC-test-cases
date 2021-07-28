@@ -2,7 +2,7 @@ function output = ball_dynamics(input)
 
 X       = input.phase.state;
 U       = input.phase.control;
-m       = 10; 
+m       = input.auxdata.mass; 
 
 s       = X(:,1);
 v       = X(:,2);
