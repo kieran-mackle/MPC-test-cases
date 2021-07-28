@@ -4,11 +4,11 @@ X       = input.phase.state;
 U       = input.phase.control;
 m       = 10; 
 
-s       = X(1);
-v       = X(2);
+s       = X(:,1);
+v       = X(:,2);
 
-F       = U(1);
-a       = F/m;
+F       = U(:,1);
+a       = F./m;
 
 s_dot   = v;
 v_dot   = a;
