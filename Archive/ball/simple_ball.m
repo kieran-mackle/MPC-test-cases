@@ -1,71 +1,94 @@
 % ======================================================================= %
 %                           Constrained Ball MPC                          %
 % ======================================================================= %
-
 clearvars;
-tic;
-deg = pi/180;
-rad = 180/pi;
+deg     = pi/180;
+rad     = 180/pi;
 
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
-params.timestep     = 0.5;
-params.horizon      = 10;
-params.sim_time     = 50;
+params.timestep             = 0.5;
+params.horizon              = 50;
+params.sim_time             = 50;
 
 % ----------------------------------------------------------------------- %
 % Define function handles
 % ----------------------------------------------------------------------- %
-functions.dynamics  = @ball_dynamics;
-functions.output    = @ball_output;
+functions.dynamics          = @ball_dynamics;
+functions.output            = @ball_output;
 
 % ----------------------------------------------------------------------- %
 % Define initial state
 % ----------------------------------------------------------------------- %
-x0  = [0, 0];
-u0  = [0.0]';
+x0                          = [0, 0];
+u0                          = [0.0]';
 
-initial.state       = x0;
-initial.control     = u0;
+initial.state               = x0;
+initial.control             = u0;
 
-target_ref          = [5]';
+target_ref                  = [5]';
 
-auxdata.mass        = 10; 
+% Define control model
+control_model.auxdata.mass  = 10;
+control_model.dynamics      = @ball_dynamics;
+control_model.output        = @ball_output;
+
+% Define plant model
+plant_model                 = control_model;
+% plant_model.auxdata.mass    = 6;
 
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
-cost.output         = eye(1);
-cost.control        = eye(1);
+cost_weightings.output      = eye(1);
+cost_weightings.control     = eye(1);
 
-penalty_method      = 'quadratic';
-penalty_weight      = 1e0; % For slack variables
-hard_only           = true;
+penalty_method              = 'linear';
+penalty_weight              = 1e3;          % For slack variables
+constraint_type             = 'none'; % Options are none, soft, hard, mixed
 
-constraints.hard.rate   = [-1, 1];
-constraints.hard.input  = [-1.5, 1.5];
-constraints.hard.output = [0, 8];
+constraints.hard.rate       = [-1.5, 1.5];
+constraints.hard.input      = [-1.5, 1.5];
+constraints.hard.output     = [-2, 8];
 
-constraints.soft.rate   = [-1, 1];
-constraints.soft.input  = [-1.5, 1.5];
-constraints.soft.output = [0, 7];
+constraints.soft.rate       = [-1, 1];
+constraints.soft.input      = [-1.2, 1.2];
+constraints.soft.output     = [0, 7];
+
+constraints.type            = constraint_type;
 
 % ----------------------------------------------------------------------- %
-% Define model mismatch auxdata
+% Construct MPC Input
 % ----------------------------------------------------------------------- %
-model_mismatch          = false;
-mismatch_auxdata.mass   = 3;
+mpc_input.control_model     = control_model;
+mpc_input.cost              = cost_weightings;
+mpc_input.constraints       = constraints;
+mpc_input.penalty_method    = penalty_method;
+mpc_input.penalty_weight    = penalty_weight;
+mpc_input.params            = params;
+mpc_input.reference         = target_ref;
+mpc_input.initial           = initial;
+
+% ----------------------------------------------------------------------- %
+% Construct Forward Simulation Input
+% ----------------------------------------------------------------------- %
+dyn_input.phase.state       = initial.state;
+sim_input.dynamics_input    = dyn_input;
+sim_input.plant_model       = plant_model;
+sim_input.Ts                = params.timestep;
+
+% ----------------------------------------------------------------------- %
+% Construct Input
+% ----------------------------------------------------------------------- %
+input.mpc_input             = mpc_input;
+input.sim_input             = sim_input;
 
 % ----------------------------------------------------------------------- %
 % Solve MPC QP Problem
 % ----------------------------------------------------------------------- %
-output = solve_slack_mpc(initial, params, cost, constraints, functions, ...
-                         auxdata, target_ref, penalty_method,           ...
-                         penalty_weight, hard_only,                     ...
-                         model_mismatch, mismatch_auxdata);
+output                      = mpc_control(input);
 
-toc;
 % ----------------------------------------------------------------------- %
 % Extract results
 % ----------------------------------------------------------------------- %
@@ -83,7 +106,7 @@ grid on;
 title('MPC input');
 ylabel('Input force (N)');
 xlabel('Time (s)');
-stairs(output.time, output.control, 'b-');
+stairs(output.time, output.control, 'k-');
 % patch('vertices', [0, constraints.soft.input(1); 
 %                    0, constraints.hard.input(1); 
 %                    params.sim_time, constraints.hard.input(1); 
@@ -111,12 +134,12 @@ sgtitle('Physical state trajectory');
 subplot(2,1,1);
 hold on;
 grid on;
-plot(output.time, output.state(1:2:end), 'b-');
+plot(output.time, output.state(1:2:end), 'k-');
 ylabel('x-position (m)');
 subplot(2,1,2);
 hold on;
 grid on;
-plot(output.time, output.state(2:2:end), 'b-');
+plot(output.time, output.state(2:2:end), 'k-');
 ylabel('velocity (m)');
 xlabel('Time (s)');
 
@@ -126,7 +149,7 @@ set(gcf,'color','w');
 hold on;
 title('Output');
 grid on;
-plot(output.time, output.Z, 'b-');
+plot(output.time, output.Z, 'k-');
 % plot([0,params.sim_time], [target_ref, target_ref], 'b--');
 % patch('vertices', [0, constraints.soft.output(1); 
 %                    0, constraints.hard.output(1); 
