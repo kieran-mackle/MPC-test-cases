@@ -23,7 +23,7 @@ for i = 1:2
     
 %     output(i).dynamics = [s_dot, v_dot];
     output(i).dynamics = [s_dot, v_dot, Fdot];
-    output(i).integrand = [ ref_errorQ2 + controller_movement];
+    output(i).integrand = [ ref_errorQ2 + controller_movement ];
 
 end
 

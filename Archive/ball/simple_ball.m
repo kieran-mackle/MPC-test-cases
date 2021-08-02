@@ -8,9 +8,9 @@ rad     = 180/pi;
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
-params.timestep             = 0.5;
-params.horizon              = 50;
-params.sim_time             = 50;
+params.timestep             = 1;
+params.horizon              = 1000;
+params.sim_time             = 30;
 
 % ----------------------------------------------------------------------- %
 % Define function handles
