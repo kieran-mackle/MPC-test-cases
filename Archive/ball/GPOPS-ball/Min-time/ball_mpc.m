@@ -1,16 +1,16 @@
 % ======================================================================= %
 %                           Constrained Ball MPC                          %
 % ======================================================================= %
-clearvars;
+clearvars -except dp t x;
 deg     = pi/180;
 rad     = 180/pi;
 
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
-params.timestep             = 1;
-params.horizon              = 1000;
-params.sim_time             = 15;
+params.timestep             = 0.5;
+params.horizon              = 30;
+params.sim_time             = 20;
 
 % ----------------------------------------------------------------------- %
 % Define function handles
@@ -21,13 +21,13 @@ functions.output            = @ball_output;
 % ----------------------------------------------------------------------- %
 % Define initial state
 % ----------------------------------------------------------------------- %
-x0                          = [0, 0];
+x0                          = [0, 0, 0];
 u0                          = [0.0]';
 
 initial.state               = x0;
 initial.control             = u0;
 
-target_ref                  = [5]';
+set_points                  = dp; %[5, 0]';
 
 % Define control model
 control_model.auxdata.mass  = 10;
@@ -36,25 +36,28 @@ control_model.output        = @ball_output;
 
 % Define plant model
 plant_model                 = control_model;
-% plant_model.auxdata.mass    = 6;
+plant_model.auxdata.mass    = 10;
 
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
-cost_weightings.output      = eye(1);
+cost_weightings.output      = [1, 0;
+                               0, 0];
 cost_weightings.control     = eye(1);
 
 penalty_method              = 'linear';
 penalty_weight              = 1e3;          % For slack variables
 constraint_type             = 'none'; % Options are none, soft, hard, mixed
 
-constraints.hard.rate       = [-1.5, 1.5];
-constraints.hard.input      = [-1.5, 1.5];
-constraints.hard.output     = [-2, 8];
+constraints.hard.rate       = [-1.5, 1.5];      % Force acceleration constraint
+constraints.hard.input      = [-1.5, 1.5];      % Force rate constraints
+constraints.hard.output     = [-2, 8;           % Position constraints
+                               -5, 5];          % Velocity constraints
 
 constraints.soft.rate       = [-1, 1];
 constraints.soft.input      = [-1.2, 1.2];
-constraints.soft.output     = [0, 7];
+constraints.soft.output     = [-1, 7;
+                               -4, 4];
 
 constraints.type            = constraint_type;
 
@@ -67,8 +70,9 @@ mpc_input.constraints       = constraints;
 mpc_input.penalty_method    = penalty_method;
 mpc_input.penalty_weight    = penalty_weight;
 mpc_input.params            = params;
-mpc_input.reference         = target_ref;
+mpc_input.set_points        = set_points;
 mpc_input.initial           = initial;
+mpc_input.t                 = 0;
 
 % ----------------------------------------------------------------------- %
 % Construct Forward Simulation Input
@@ -83,6 +87,7 @@ sim_input.Ts                = params.timestep;
 % ----------------------------------------------------------------------- %
 input.mpc_input             = mpc_input;
 input.sim_input             = sim_input;
+input.reference_function    = @get_reference;
 
 % ----------------------------------------------------------------------- %
 % Solve MPC QP Problem
@@ -134,22 +139,24 @@ sgtitle('Physical state trajectory');
 subplot(2,1,1);
 hold on;
 grid on;
-plot(output.time, output.state(1:2:end), 'k-');
+plot(output.time, output.state(1,:), 'k-');
 ylabel('x-position (m)');
 subplot(2,1,2);
 hold on;
 grid on;
-plot(output.time, output.state(2:2:end), 'k-');
+plot(output.time, output.state(2,:), 'k-');
 ylabel('velocity (m)');
 xlabel('Time (s)');
 
 
 figure(3);
 set(gcf,'color','w');
-hold on;
-title('Output');
-grid on;
-plot(output.time, output.Z, 'k-');
+subplot(2,1,1);
+hold on; grid on;
+title('Position output');
+plot(output.time, output.Z(1,:), 'k-');
+stairs(output.time, output.ref(1,:), 'b--');
+plot(t, x, 'r-');
 % plot([0,params.sim_time], [target_ref, target_ref], 'b--');
 % patch('vertices', [0, constraints.soft.output(1); 
 %                    0, constraints.hard.output(1); 
@@ -172,5 +179,15 @@ plot(output.time, output.Z, 'k-');
 % plot([0,params.sim_time], [constraints.hard.output(2), ...
 %      constraints.hard.output(2)], 'r-', 'LineWidth', 2);
 ylabel('x-position (m)');
+
+subplot(2,1,2);
+hold on;
+title('Velocity output');
+grid on;
+plot(output.time, output.Z(2,:), 'k-');
+stairs(output.time, output.ref(2,:), 'b--');
+% stairs(output.time, polyval(dp, output.time));
 xlabel('Time (s)');
+
+
 
