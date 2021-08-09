@@ -1,5 +1,10 @@
 % ===================== Simple 1D Ball GPOPS  ===================== %
 % ================================================================= %
+% Single phase GPOPS example with 1D ball
+% Differences to MPC include:
+%   - dynamics function: contains an extra state (Fdot) to allow
+%     constraint of rates in GPOPS
+
 mpc_output = output;
 clearvars -except mpc_output; clc;
 
@@ -52,8 +57,8 @@ mesh.phase.colpoints        = 2*ones(1,M);
 %                    Construct GPOPS-II input                       %
 %------------------------------------------------------------------ %
 setup.name                  = '1D-ball';
-setup.functions.continuous  = @new_ball_dynamics;
-setup.functions.endpoint    = @new_GPOPS_objective;
+setup.functions.continuous  = @ball_dynamics;
+setup.functions.endpoint    = @GPOPS_objective;
 setup.nlp.solver            = 'ipopt';
 setup.bounds                = bounds;
 setup.guess                 = guess;

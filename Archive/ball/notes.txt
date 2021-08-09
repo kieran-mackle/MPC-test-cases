@@ -1,0 +1,28 @@
+call libdense.a
+
+
+Initialise Matrix in Matlab, pass into qp_solve, run
+
+Gurobi will write to matric
+
+
+Look into pointers
+
+
+C has no concept of arrays
+
+
+Run gurobi has 3 int inputs, then 
+*double, which are pointers to the first element of Q
+*Q
+
+
+To pass an array, pass in the addresss of the first element of the array
+
+
+In C test function, pass in a pointer instead of an array
+
+
+
+
+

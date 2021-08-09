@@ -1,4 +1,5 @@
 function output = get_reference(mpc_input)
+% Provides controller with reference and cost matrices
 
 % Unpack input
 t           = mpc_input.t;
