@@ -16,13 +16,13 @@ Tref = 5;
 Ts = 0.5;
 
 % Define prediction horizon
-Hp = 10;
+Hp = 3;
 
 % Define control horizon
 Hu = 3;
 
 % Total time horizon (?)
-total_time = 20;
+total_time = 10;
 
 
 % Define open-loop dynamics model (continuous)
@@ -94,9 +94,9 @@ x_0 = zeros(n,1); % Initial state
 u_0 = zeros(m,1);
 
 % f = waitbar(0);
-x_k = x_0;
-u_k = u_0;
-r = [0, 40, 0]';
+x_k = [0.1, 0.2, 0.3, 0.4]';
+u_k = [0.1];
+r = [0, 0, 0]';
 
 for k = 1:N
     t(k) = Ts*(k);
@@ -135,28 +135,29 @@ for k = 1:N
         minimize( (YY-RR)' * QQ * (YY-RR) + du'*big_R*du)
         subject to
             x(:, 1) == x_k;
-            -15*deg <= u(:) <= 15*deg % elevator angle
-            -30*deg*Ts <= du(:) <= 30*deg*Ts % Elevator slew rate
-            -30*deg*Ts <= u(m+1:2*m) - u(1:m) <= 30*deg*Ts % Initial elevator slew rate
+%             -15*deg <= u(:) <= 15*deg % elevator angle
+%             -30*deg*Ts <= du(:) <= 30*deg*Ts % Elevator slew rate
+%             -30*deg*Ts <= u(m+1:2*m) - u(1:m) <= 30*deg*Ts % Initial elevator slew rate
 
             
         for i = 1:Hu
             subject to
                 x(:, i+1) == Ad * x(:, i) + Bd * u(m*(i-1)+1:m*i);
-                -20*deg<= YY(p*(i-1)+1,1) <= 20*deg  % pitch angle
+%                 -20*deg<= YY(p*(i-1)+1,1) <= 20*deg  % pitch angle
         end
         
         for i = Hu+1:Hp
             subject to
                 u(m*(i-1)+1:m*i) == u(m*(i-2)+1:m*(i-1));
                 x(:, i+1) == Ad * x(:, i) + Bd * u(m*(i-1)+1:m*i);
-                -20*deg<= YY(p*(i-1)+1,1) <= 20*deg  % pitch angle
+%                 -20*deg<= YY(p*(i-1)+1,1) <= 20*deg  % pitch angle
         end
     cvx_end
     
     % Extract latest results
     x_k1 = x(:,1);
     u_k1 = u(1:m);
+    u
     
     % Update state
     x_k = Ad*x_k1 + Bd*u_k1;
