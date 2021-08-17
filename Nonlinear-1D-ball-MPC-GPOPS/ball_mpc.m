@@ -15,18 +15,18 @@ rad     = 180/pi;
 % ----------------------------------------------------------------------- %
 % Extract GPOPS output reference
 % ----------------------------------------------------------------------- %
-t = gpops_output.time;
-x = gpops_output.state(:,1);
-p = polyfit(t,x,5);
-dp = polyder(p);
+% t = gpops_output.time;
+% x = gpops_output.state(:,1);
+% p = polyfit(t,x,5);
+% dp = polyder(p);
 
 
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
-params.timestep             = 0.1;
-params.horizon              = 300;
-params.sim_time             = 20;
+params.timestep             = 0.5;
+params.horizon              = 50;
+params.sim_time             = 30;
 
 % ----------------------------------------------------------------------- %
 % Define function handles
@@ -43,22 +43,24 @@ u0                          = [0.0]';
 initial.state               = x0;
 initial.control             = u0;
 
-set_points                  = dp; %[5, 0]';
+set_points                  = [5, 0]'; %dp; 
 
 % Define control model
 control_model.auxdata.mass  = 10;
+control_model.auxdata.k     = 1;
 control_model.dynamics      = @ball_dynamics;
 control_model.output        = @ball_output;
 
 % Define plant model
 plant_model                 = control_model;
 plant_model.auxdata.mass    = 10;
+plant_model.auxdata.k       = 2;
 
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
 cost_weightings.output      = [1, 0;
-                               0, 0];
+                               0, 1];
 cost_weightings.control     = eye(1);
 
 penalty_method              = 'linear';
@@ -130,15 +132,15 @@ hold on;
 grid on;
 ylabel('Input force (N)');
 stairs(output.time, output.state(3,:), 'k-');
-stairs(gpops_output.time, gpops_output.state(:,3), 'b-');
-legend('MPC', 'GPOPS');
+% stairs(gpops_output.time, gpops_output.state(:,3), 'b-');
+% legend('MPC', 'GPOPS');
 
 subplot(2,1,2);
 hold on;
 grid on;
 stairs(output.time, output.control, 'k-');
-stairs(gpops_output.time, gpops_output.control, 'b-');
-legend('MPC', 'GPOPS');
+% stairs(gpops_output.time, gpops_output.control, 'b-');
+% legend('MPC', 'GPOPS');
 ylabel('Force rate (N/s)');
 xlabel('Time (s)');
 
@@ -169,8 +171,8 @@ hold on; grid on;
 title('Position output');
 plot(output.time, output.Z(1,:), 'k-');
 stairs(output.time, output.ref(1,:), 'r--');
-plot(t, x, 'b-');
-legend('MPC response', 'Reference', 'GPOPS manouevre');
+% plot(t, x, 'b-');
+% legend('MPC response', 'Reference', 'GPOPS manouevre');
 ylabel('x-position (m)');
 
 subplot(2,1,2);
