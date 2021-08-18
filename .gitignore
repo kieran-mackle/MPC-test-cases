@@ -1,2 +1,4 @@
+codegen
+*.log
 *.m~
 *IPOPTinfo.txt
