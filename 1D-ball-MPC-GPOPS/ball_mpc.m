@@ -27,6 +27,7 @@ dp = polyder(p);
 params.timestep             = 0.1;
 params.horizon              = 300;
 params.sim_time             = 20;
+convex_solver               = 'gurobi';
 
 % ----------------------------------------------------------------------- %
 % Define function handles
@@ -61,21 +62,27 @@ cost_weightings.output      = [1, 0;
                                0, 0];
 cost_weightings.control     = eye(1);
 
-penalty_method              = 'linear';
-penalty_weight              = 1e3;          % For slack variables
-constraint_type             = 'none'; % Options are none, soft, hard, mixed
-
 constraints.hard.rate       = [-1.5, 1.5];      % Force acceleration constraint
 constraints.hard.input      = [-1.5, 1.5];      % Force rate constraints
 constraints.hard.output     = [-2, 8;           % Position constraints
                                -5, 5];          % Velocity constraints
 
-constraints.soft.rate       = [-1, 1];
-constraints.soft.input      = [-1.2, 1.2];
-constraints.soft.output     = [-1, 7;
-                               -4, 4];
+constraints.weights.hard_rate = [nan,nan];
+constraints.weights.hard_input = [0,0];
+constraints.weights.hard_output = [0,0,
+                                   0,0];
 
-constraints.type            = constraint_type;
+
+% penalty_method              = 'linear';
+% penalty_weight              = 1e3;          % For slack variables
+% constraint_type             = 'none'; % Options are none, soft, hard, mixed
+% 
+% constraints.soft.rate       = [-1, 1];
+% constraints.soft.input      = [-1.2, 1.2];
+% constraints.soft.output     = [-1, 7;
+%                                -4, 4];
+% 
+% constraints.type            = constraint_type;
 
 % ----------------------------------------------------------------------- %
 % Construct MPC Input
@@ -83,12 +90,13 @@ constraints.type            = constraint_type;
 mpc_input.control_model     = control_model;
 mpc_input.cost              = cost_weightings;
 mpc_input.constraints       = constraints;
-mpc_input.penalty_method    = penalty_method;
-mpc_input.penalty_weight    = penalty_weight;
+% mpc_input.penalty_method    = penalty_method;
+% mpc_input.penalty_weight    = penalty_weight;
 mpc_input.params            = params;
 mpc_input.set_points        = set_points;
 mpc_input.initial           = initial;
 mpc_input.t                 = 0;
+mpc_input.solver            = convex_solver;
 
 % ----------------------------------------------------------------------- %
 % Construct Forward Simulation Input

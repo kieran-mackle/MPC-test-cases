@@ -8,13 +8,14 @@
 clearvars;
 deg     = pi/180;
 rad     = 180/pi;
-
+tic;
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
 params.timestep             = 0.25;
 params.horizon              = 50;
 params.sim_time             = 30;
+convex_solver               = 'gurobi';
 
 % ----------------------------------------------------------------------- %
 % Define function handles
@@ -48,19 +49,34 @@ plant_model                 = control_model;
 cost_weightings.output      = eye(1);
 cost_weightings.control     = eye(1);
 
-penalty_method              = 'linear';
-penalty_weight              = 1e3;          % For slack variables
-constraint_type             = 'none'; % Options are none, soft, hard, mixed
+constraints.hard.rate       = [0, 0];
+constraints.hard.input      = [0, 0];
+constraints.hard.output     = [0, 0];
 
-constraints.hard.rate       = [-1.5, 1.5];
-constraints.hard.input      = [-1.5, 1.5];
-constraints.hard.output     = [-2, 8];
+constraints.weights.hard_rate = [0,0];
+constraints.weights.hard_input = [0,0];
+constraints.weights.hard_output = [0,0];
 
-constraints.soft.rate       = [-1, 1];
-constraints.soft.input      = [-1.2, 1.2];
-constraints.soft.output     = [0, 7];
+% quadprog specific 
 
-constraints.type            = constraint_type;
+% penalty_method              = 'linear';
+% penalty_weight              = 1e3;          % For slack variables
+% constraint_type             = 'hard'; % Options are none, soft, hard, mixed
+
+% constraints.soft.rate       = [-1, 1];
+% constraints.soft.input      = [-1.2, 1.2];
+% constraints.soft.output     = [0, 7];
+
+% constraints.type            = constraint_type;
+
+% ----------------------------------------------------------------------- %
+% Define scaling matrices
+% ----------------------------------------------------------------------- %
+                                        % min, max
+state_scaling               = [0, 5;    % x-position
+                              -2, 2];   % velocity
+control_scaling             = [-10, 10]; 
+reference_scaling           = [0, 5];   % Must be the same as the state scaling?
 
 % ----------------------------------------------------------------------- %
 % Construct MPC Input
@@ -68,11 +84,15 @@ constraints.type            = constraint_type;
 mpc_input.control_model     = control_model;
 mpc_input.cost              = cost_weightings;
 mpc_input.constraints       = constraints;
-mpc_input.penalty_method    = penalty_method;
-mpc_input.penalty_weight    = penalty_weight;
+% mpc_input.penalty_method    = penalty_method;
+% mpc_input.penalty_weight    = penalty_weight;
 mpc_input.params            = params;
 mpc_input.reference         = target_ref;
 mpc_input.initial           = initial;
+mpc_input.solver            = convex_solver;
+mpc_input.scaling.state     = state_scaling;
+mpc_input.scaling.control   = control_scaling;
+mpc_input.scaling.reference = reference_scaling;
 
 % ----------------------------------------------------------------------- %
 % Construct Forward Simulation Input
@@ -179,3 +199,4 @@ plot(output.time, output.Z, 'k-');
 ylabel('x-position (m)');
 xlabel('Time (s)');
 
+toc
