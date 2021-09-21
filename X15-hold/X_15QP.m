@@ -10,7 +10,7 @@ rad = 180/pi;
 % ----------------------------------------------------------------------- %
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
-params.timestep     = 0.2;
+params.timestep     = 0.05;
 params.horizon      = 100;
 params.sim_time     = 50;
 convex_solver       = 'gurobi';
@@ -18,17 +18,14 @@ convex_solver       = 'gurobi';
 % ----------------------------------------------------------------------- %
 % Define initial state
 % ----------------------------------------------------------------------- %
-load('./../../Results/Config1/6DOF/CaseComparison/CaseA.mat')
-% load('./../../Results/Config1/6DOF/MPC_validation/MPC_validation.mat')
+load('./../../Optimisation/Results/Config1/6DOF/20kmAltHold/20kmAltHold.mat')
+
 out = output.result.solution.phase;
 x0  = out.state(1,:);
 u0  = out.control(1,:);
 
 initial.state       = x0;
 initial.control     = u0;
-
-% Nominal reference - actual reference controlled in reference_function
-target_ref          = [16e3, 0, 0, 6, 0]'; % [h, fda, thr, Ma, fpa]
 
 % Define control model
 control_model.auxdata       = auxdata;
@@ -43,11 +40,11 @@ plant_model                 = control_model;
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
-cost_weightings.output         = 1e5*[1, 0, 0, 0, 0;
-                                   0, 0, 0, 0, 0;
-                                   0, 0, 0, 0, 0;
-                                   0, 0, 0, 1, 0;
-                                   0, 0, 0, 0, 1];
+cost_weightings.output         = 1e3* [1, 0, 0, 0, 0;
+                                       0, 0, 0, 0, 0;
+                                       0, 0, 0, 0, 0;
+                                       0, 0, 0, 0, 0;
+                                       0, 0, 0, 0, 0];
 cost_weightings.control        = eye(length(initial.control));
 
 penalty_method      = 'quadratic';
@@ -65,13 +62,13 @@ constraints.hard.output  = [   0,      0     ;
                                0,      0     ];
 
 % NaN for hard constraints, Inf for stiff ?
-constraints.weights.hard_rate   = [1, 1;
-                                   1, 1];
-constraints.weights.hard_input  = [nan, nan;
-                                   nan, nan];
+constraints.weights.hard_rate   = [0, 0;
+                                   0, 0];
+constraints.weights.hard_input  = [0, 0;
+                                   0, 0];
 constraints.weights.hard_output = [0, 0;
-                                   Inf, Inf;
-                                   Inf, Inf;
+                                   0, 0;
+                                   0, 0;
                                    0, 0;
                                    0, 0];
 
@@ -82,7 +79,6 @@ mpc_input.control_model     = control_model;
 mpc_input.cost              = cost_weightings;
 mpc_input.constraints       = constraints;
 mpc_input.params            = params;
-mpc_input.reference         = target_ref;
 mpc_input.initial           = initial;
 mpc_input.solver            = convex_solver;
 
@@ -181,7 +177,7 @@ subplot(1,3,1);
 hold on;
 grid on;
 plot(output.time, output.Z(1,:)*1e-3, 'k-');
-plot([0,params.sim_time], [target_ref(1), target_ref(1)]/1e3, 'b--');
+% plot([0,params.sim_time], [target_ref(1), target_ref(1)]/1e3, 'b--');
 title('Altitude');
 xlabel('Time (s)');
 ylabel('h (km)');
@@ -190,7 +186,7 @@ subplot(1,3,2);
 hold on;
 grid on;
 plot(output.time, output.Z(4,:), 'k-');
-plot([0,params.sim_time], [target_ref(4), target_ref(4)], 'b--');
+% plot([0,params.sim_time], [target_ref(4), target_ref(4)], 'b--');
 title('Mach number');
 xlabel('Time (s)');
 ylabel('Ma');
@@ -199,7 +195,7 @@ subplot(1,3,3);
 hold on;
 grid on;
 plot(output.time, output.Z(5,:)*rad, 'k-');
-plot([0,params.sim_time], [target_ref(5), target_ref(5)]*rad, 'b--');
+% plot([0,params.sim_time], [target_ref(5), target_ref(5)]*rad, 'b--');
 title('Flight path angle');
 xlabel('Time (s)');
 ylabel('\gamma (deg)');
