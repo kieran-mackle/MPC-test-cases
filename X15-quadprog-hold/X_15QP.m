@@ -49,7 +49,7 @@ cost_weightings.control        = eye(length(initial.control));
 
 % Quadprog constraint handling options
 constraints.type = 'soft';      % None, soft, hard or mixed
-penalty_method = 'quadratic';   % Quadratic or linear
+penalty_method = 'linear';   % Quadratic or linear
 penalty_weight      = 1e3;
 
 
