@@ -13,7 +13,7 @@ tic;
 % Define MPC Parameters
 % ----------------------------------------------------------------------- %
 params.timestep             = 0.25;
-params.horizon              = 70;
+params.horizon              = 75;
 params.sim_time             = 30;
 convex_solver               = 'gurobi';
 
@@ -47,7 +47,7 @@ plant_model                 = control_model;
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
 Q       = eye(1); % Output cost
-R       = eye(1); % Control cost
+R       = 10*eye(1); % Control cost
 
 constraints.hard.rate       = [0, 0];
 constraints.hard.input      = [0, 0];
