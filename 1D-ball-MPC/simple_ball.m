@@ -50,11 +50,11 @@ Q       = 10*eye(1); % Output cost
 R       = 1*eye(1); % Control cost
 
 constraints.hard.rate       = [-1, 1];
-constraints.hard.input      = [0, 0];
+constraints.hard.input      = [-5, 5];
 constraints.hard.output     = [0, 0];
 
 constraints.weights.hard_rate = [nan,nan];
-constraints.weights.hard_input = [0,0];
+constraints.weights.hard_input = [nan,nan];
 constraints.weights.hard_output = [0,0];
 
 % ----------------------------------------------------------------------- %
