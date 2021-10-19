@@ -46,14 +46,14 @@ plant_model                 = control_model;
 % ----------------------------------------------------------------------- %
 % Define cost and constraint matrices
 % ----------------------------------------------------------------------- %
-Q       = 100*eye(1); % Output cost
+Q       = 10*eye(1); % Output cost
 R       = 1*eye(1); % Control cost
 
-constraints.hard.rate       = [0, 0];
+constraints.hard.rate       = [-1, 1];
 constraints.hard.input      = [0, 0];
 constraints.hard.output     = [0, 0];
 
-constraints.weights.hard_rate = [0,0];
+constraints.weights.hard_rate = [nan,nan];
 constraints.weights.hard_input = [0,0];
 constraints.weights.hard_output = [0,0];
 
